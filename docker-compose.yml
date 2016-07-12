@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+  dev:
+    image: 'golang:1.6-onbuild'
+    volumes:
+      - 'data:/go'
+      - '.:/go/src/app'
+    ports:
+      - '8080:8080'
+
+volumes:
+  data:
+    driver: 'local'
