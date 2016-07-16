@@ -23,7 +23,7 @@ docker-compose run make
 
 run:
 ```
-docker-compose run make exec
+docker-compose run make run
 ```
 
 ## Author
