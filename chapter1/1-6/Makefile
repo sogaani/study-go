@@ -1,5 +1,5 @@
 PROG := lissajous2.exe
-SUMMARY := "背景が黒線の色が虹色のリサージュ図形を作成する"
+SUMMARY := "背景が黒　線の色が虹色のリサージュ図形を作成する"
 
 .PHONY: all run clean
 
