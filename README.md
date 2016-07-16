@@ -18,12 +18,12 @@ docker-compose
 
 build:
 ```
-docker-compose run make
+docker-compose run dev make
 ```
 
 run:
 ```
-docker-compose run make run
+docker-compose run dev make run
 ```
 
 ## Author
