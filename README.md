@@ -18,12 +18,16 @@ docker-compose
 
 build:
 ```
-docker-compose run make
+docker-compose run dev make
 ```
 
 run:
 ```
+<<<<<<< HEAD
 docker-compose run make exec
+=======
+docker-compose run dev make run
+>>>>>>> 81426e1... README.mdのUsgaeが間違ってたので修正した
 ```
 
 ## Author
