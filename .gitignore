@@ -1,0 +1,9 @@
+#go get directory
+/go/*
+
+#emacs files
+\#*#
+*~
+
+#build files
+*.exe
