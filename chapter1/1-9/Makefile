@@ -1,5 +1,5 @@
-PROG :=	echo1.exe
-SUMMARY := "プログラム名も出力するecho"
+PROG :=	fetch3.exe
+SUMMARY := "httpのステータスコードも出力するfetch"
 
 .PHONY: all run clean
 
@@ -9,7 +9,7 @@ run: $(PROG)
 	@echo "========サマリー========"
 	@echo $(SUMMARY)
 	@echo "========実行開始========"
-	./$< test test test
+	./$< google.com
 	@echo ""
 .go.exe:
 	go build -o $@ $<

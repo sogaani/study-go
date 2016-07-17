@@ -53,13 +53,14 @@ func main() {
 
 func makePalette() {
 	palette = make([]color.Color, colornum)
+	palette[0] = color.RGBA{0x00, 0x00, 0x00, 0xff}
 	stride := colornum / 3
 	//赤から青
 	var r uint8 = 255
 	var g uint8 = 0
 	var b uint8 = 0
 	var diff uint8 = uint8(256 / stride)
-	i := 0
+	i := 1
 	for ; i < stride; i++ {
 		palette[i] = color.RGBA{r, g, b, 0xff}
 		r -= diff
@@ -101,17 +102,20 @@ func lissajous(out io.Writer) {
 	freq := rand.Float64() * 3.0 // relative frequency of y oscillator
 	anim := gif.GIF{LoopCount: nframes}
 	phase := 0.0 // phase difference
-	diff := 2 * math.Pi / 256.0
+	diff := 256.0 / 2 * math.Pi
 	for i := 0; i < nframes; i++ {
 		rect := image.Rect(0, 0, 2*size+1, 2*size+1)
 		img := image.NewPaletted(rect, palette)
-		colorIndex := 0.0
+		colorIndex := 1.0
 		for t := 0.0; t < cycles*2*math.Pi; t += res {
 			x := math.Sin(t)
 			y := math.Sin(t*freq + phase)
 			img.SetColorIndex(size+int(x*size+0.5), size+int(y*size+0.5),
 				uint8(colorIndex))
-			colorIndex += diff
+			colorIndex += diff * res
+			if colorIndex > float64(colornum) {
+				colorIndex = 1.0
+			}
 		}
 		phase += 0.1
 		anim.Delay = append(anim.Delay, delay)

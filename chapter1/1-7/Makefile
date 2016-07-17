@@ -1,5 +1,5 @@
-PROG :=	echo1.exe
-SUMMARY := "プログラム名も出力するecho"
+PROG :=	fetch1.exe
+SUMMARY := "io.Copyを使ったfetch"
 
 .PHONY: all run clean
 
@@ -9,7 +9,7 @@ run: $(PROG)
 	@echo "========サマリー========"
 	@echo $(SUMMARY)
 	@echo "========実行開始========"
-	./$< test test test
+	./$< http://google.com
 	@echo ""
 .go.exe:
 	go build -o $@ $<

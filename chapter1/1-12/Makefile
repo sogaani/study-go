@@ -1,5 +1,5 @@
-PROG :=	echo1.exe
-SUMMARY := "プログラム名も出力するecho"
+PROG :=	server1.exe
+SUMMARY := "パラメータによって様々なリサージュ曲線を表示するserver"
 
 .PHONY: all run clean
 
@@ -9,8 +9,10 @@ run: $(PROG)
 	@echo "========サマリー========"
 	@echo $(SUMMARY)
 	@echo "========実行開始========"
-	./$< test test test
-	@echo ""
+	./$< &
+	curl http://localhost:8000/?cycle=20 > cycle20.gif
+	curl http://localhost:8000/?size=200 > size200.gif
+	pkill $<
 .go.exe:
 	go build -o $@ $<
 clean:
