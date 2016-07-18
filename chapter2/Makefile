@@ -1,4 +1,4 @@
-subdirs := $(shell ls -F | grep chapter)
+subdirs := $(shell ls -F | grep /)
 .PHONY: all run clean
 
 all:

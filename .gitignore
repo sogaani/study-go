@@ -1,5 +1,6 @@
 #go get directory
 /go/*
+!.gitkeep
 
 #emacs files
 \#*#
