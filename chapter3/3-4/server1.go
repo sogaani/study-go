@@ -10,9 +10,6 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"image/color"
-	"image/gif"
 	"io"
 	"log"
 	"math"
@@ -27,15 +24,17 @@ import (
 
 //!+main
 
-var palette = []color.Color{color.RGBA{0x00, 0x00, 0x00, 0xff}, color.RGBA{0x00, 0xff, 0x00, 0xff}}
+var width, height = 600, 320                        // canvas size in pixels
+var cells = 100                                     // number of grid cells
+var xyrange = 30.0                                  // axis ranges (-xyrange..+xyrange)
+var xyscale = float64(width) / 2 / float64(xyrange) // pixels per x or y unit
+var zscale = float64(height) * 0.4                  // pixels per z unit
+var angle = math.Pi / 6                             // angle of x, y axes (=30°)
+var color = "#00ff00"
+var sin30, cos30 = math.Sin(angle), math.Cos(angle) // sin(30°), cos(30°)
 
-const (
-	balckIndex = 0 // first color in palette
-	greenIndex = 1 // next color in palette
-)
-
-func main() {
-	fmt.Printf("<svg xmlns='http://www.w3.org/2000/svg' "+
+func graph(out io.Writer) {
+	fmt.Fprintf(out, "<svg xmlns='http://www.w3.org/2000/svg' "+
 		"style='stroke: grey; fill: white; stroke-width: 0.7' "+
 		"width='%d' height='%d'>", width, height)
 	for i := 0; i < cells; i++ {
@@ -45,19 +44,19 @@ func main() {
 			cx, cy, cerr := corner(i, j+1)
 			dx, dy, derr := corner(i+1, j+1)
 			if !(aerr || berr || cerr || derr) {
-				fmt.Printf("<polygon points='%g,%g %g,%g %g,%g %g,%g'/>\n",
+				fmt.Fprintf(out, "<polygon points='%g,%g %g,%g %g,%g %g,%g'/>\n",
 					ax, ay, bx, by, cx, cy, dx, dy)
 
 			}
 		}
 	}
-	fmt.Println("</svg>")
+	fmt.Fprintf(out, "</svg>")
 }
 
 func corner(i, j int) (float64, float64, bool) {
 	// Find point (x,y) at corner of cell (i,j).
-	x := xyrange * (float64(i)/cells - 0.5)
-	y := xyrange * (float64(j)/cells - 0.5)
+	x := xyrange * (float64(i)/float64(cells) - 0.5)
+	y := xyrange * (float64(j)/float64(cells) - 0.5)
 
 	// Compute surface height z.
 	z, err := f(x, y)
@@ -67,8 +66,8 @@ func corner(i, j int) (float64, float64, bool) {
 	}
 
 	// Project (x,y,z) isometrically onto 2-D SVG canvas (sx,sy).
-	sx := width/2 + (x-y)*cos30*xyscale
-	sy := height/2 + (x+y)*sin30*xyscale - z*zscale
+	sx := float64(width)/2 + (x-y)*cos30*xyscale
+	sy := float64(height)/2 + (x+y)*sin30*xyscale - z*zscale
 	return sx, sy, false
 }
 
@@ -90,70 +89,47 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		cycles := 5   // number of complete x oscillator revolutions
-		res := 0.001  // angular resolution
-		size := 100   // image canvas covers [-size..+size]
-		nframes := 64 // number of animation frames
-		delay := 8    // delay between frames in 10ms units
+		w.Header().Set("Content-Type", "image/svg+xml")
+
 		if err := r.ParseForm(); err != nil {
 			log.Print(err)
 		}
 		for k, v := range r.Form {
 			var err error
 			switch k {
-			case "cycles":
-				cycles, err = strconv.Atoi(v[0])
+			case "width":
+				width, err = strconv.Atoi(v[0])
 				if err != nil {
-					cycles = 5
+					width = 600
 				}
-			case "res":
-				res, err = strconv.ParseFloat(v[0], 64)
+			case "height":
+				height, err = strconv.Atoi(v[0])
 				if err != nil {
-					res = 0.001
+					height = 320
 				}
-			case "size":
-				size, err = strconv.Atoi(v[0])
+			case "cells":
+				cells, err = strconv.Atoi(v[0])
 				if err != nil {
-					size = 100
+					cells = 100
 				}
-			case "nframes":
-				nframes, err = strconv.Atoi(v[0])
+			case "xyrange":
+				xyrange, err = strconv.ParseFloat(v[0], 64)
 				if err != nil {
-					nframes = 64
+					xyrange = 30.0
 				}
-			case "delay":
-				delay, err = strconv.Atoi(v[0])
-				if err != nil {
-					delay = 8
-				}
+			case "color":
+				color = v[0]
+
 			}
 		}
-		lissajous(w, cycles, res, size, nframes, delay)
+		xyscale = float64(width) / 2 / float64(xyrange) // pixels per x or y unit
+		zscale = float64(height) * 0.4                  // pixels per z unit
+		graph(w)
 	}
 	http.HandleFunc("/", handler)
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 	return
 	//!+main
-}
-
-func lissajous(out io.Writer, cycles int, res float64, size int, nframes int, delay int) {
-	freq := rand.Float64() * 3.0 // relative frequency of y oscillator
-	anim := gif.GIF{LoopCount: nframes}
-	phase := 0.0 // phase difference
-	for i := 0; i < nframes; i++ {
-		rect := image.Rect(0, 0, 2*size+1, 2*size+1)
-		img := image.NewPaletted(rect, palette)
-		for t := 0.0; t < float64(cycles)*2*math.Pi; t += res {
-			x := math.Sin(t)
-			y := math.Sin(t*freq + phase)
-			img.SetColorIndex(size+int(x*float64(size)+0.5), size+int(y*float64(size)+0.5),
-				greenIndex)
-		}
-		phase += 0.1
-		anim.Delay = append(anim.Delay, delay)
-		anim.Image = append(anim.Image, img)
-	}
-	gif.EncodeAll(out, &anim) // NOTE: ignoring encoding errors
 }
 
 //!-main
